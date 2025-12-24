@@ -9,7 +9,7 @@ Party Stacks is a decentralized application (dApp) that gamifies pooled STX micr
 ## ✨ Features
 
 ### 🔐 WalletConnect Integration
-- Seamless wallet connection via **@stacks/connect**
+- Seamless wallet connection via **Reown AppKit**
 - Prominent WalletConnect logo for hackathon judging
 - Persistent session management
 - Support for Stacks testnet and mainnet
@@ -115,7 +115,7 @@ VITE_CONTRACT_NAME=party-rain
 **Blockchain**
 - **Stacks** - Bitcoin-secured smart contracts
 - **Clarity** - Decidable smart contract language
-- **@stacks/connect** - Wallet integration
+- **@reown/appkit** - Wallet integration
 - **@stacks/blockchain-api-client** - Blockchain data
 
 ### Project Structure
@@ -124,7 +124,7 @@ VITE_CONTRACT_NAME=party-rain
 party-stacks/
 ├── src/
 │   ├── lib/
-│   │   ├── wallet.ts              # Wallet connection logic
+│   │   ├── wallet.ts              # Reown AppKit integration
 │   │   ├── toastStore.ts          # Toast notifications
 │   │   ├── partyStore.ts          # Party state management
 │   │   ├── types.ts               # TypeScript interfaces
