@@ -17,7 +17,6 @@
     <div class="container header-content">
       <div class="logo-section">
         <h1 class="app-title">
-          <span class="party-emoji">🎉</span>
           <span class="gradient-text">Party Stacks</span>
         </h1>
         <p class="tagline text-secondary">Collaborative Rain on Stacks</p>
@@ -99,9 +98,6 @@
     margin: 0;
   }
   
-  .party-emoji {
-    font-size: 2rem;
-  }
   
   .tagline {
     font-size: 0.9rem;
@@ -151,9 +147,6 @@
       font-size: 1.5rem;
     }
     
-    .party-emoji {
-      font-size: 1.5rem;
-    }
     
     .tagline {
       font-size: 0.8rem;

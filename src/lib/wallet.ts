@@ -34,6 +34,15 @@ export async function initializeWallet() {
       description: 'Collaborative Rain Parties on Stacks',
       url: window.location.origin,
       icons: [window.location.origin + '/logo.png']
+    },
+    features: {
+      analytics: false,
+      email: false,
+      socials: []
+    },
+    themeMode: 'dark',
+    themeVariables: {
+      '--w3m-z-index': 9999
     }
   });
 
