@@ -2,7 +2,7 @@
 
 ## Executive Summary
 
-**Party Stacks** is a collaborative "rain party" decentralized application (dApp) built on the Stacks blockchain that gamifies pooled STX micro-payments. Users can host parties by creating a pool of STX tokens, invite friends to join, and when the party reaches capacity, all participants can claim their proportional share of the "rain."
+**Party Stacks** is a gamified "spray party" decentralized application (dApp) built on the Stacks blockchain that enables content creators, Twitter/X Space hosts, and community leaders to engage their audience through STX distributions. Hosts lock STX into a party pool and can spray (distribute) rewards to participants at any time. Participants can join open parties or parties with optional capacity limits, and claim their accumulated rewards from their dashboard whenever they choose.
 
 **Target Hackathon:** Stacks blockchain hackathon with WalletConnect integration emphasis  
 **Target Deployment:** Stacks Testnet (initial), Mainnet (post-hackathon)  
@@ -13,19 +13,22 @@
 ## Product Vision
 
 ### Problem Statement
-Current blockchain transactions are often isolated, individual actions. There's limited tooling for collaborative, social, and gamified on-chain interactions that bring people together in a fun, low-stakes environment.
+Content creators, community leaders, and Twitter/X Space hosts lack engaging ways to reward their audience on-chain. Current tipping and reward mechanisms are one-to-one transactions that don't create communal excitement or gamification.
 
 ### Solution
-Party Stacks creates a social, collaborative blockchain experience where:
-- Users pool resources together for shared rewards
-- Real-time on-chain synchronization creates excitement and anticipation
-- WalletConnect integration makes participation seamless
-- Classy UI/UX makes blockchain feel premium and accessible
+Party Stacks creates a gamified reward distribution experience where:
+- **Creators** lock STX to create "spray parties" for their audience
+- **Participants** join parties and accumulate claimable rewards
+- **Hosts** can spray rewards at any time (before or after max capacity)
+- **Flexible capacity**: Optional max participants for controlled distribution
+- **Dashboard claiming**: Participants see their balance and claim when ready
+- Real-time on-chain synchronization creates excitement
 
 ### Target Audience
-1. **Primary:** Blockchain developers and builders participating in hackathons
-2. **Secondary:** Crypto enthusiasts interested in social DeFi experiments
-3. **Tertiary:** Groups wanting to experiment with collaborative blockchain interactions
+1. **Primary:** Content creators (writers, artists, educators on Stacks)
+2. **Secondary:** Twitter/X Space hosts engaging live audiences
+3. **Tertiary:** Community leaders running events and campaigns
+4. **Hackathon bonus:** Blockchain developers demonstrating social DeFi
 
 ---
 
@@ -45,24 +48,28 @@ Party Stacks creates a social, collaborative blockchain experience where:
 - Connection success rate > 95%
 - Connection time < 3 seconds
 
-### 2. Host a Party
+### 2. Host a Spray Party
 **Priority:** P0
 
 **Requirements:**
 - Input field for total STX amount (min: 1 STX)
-- Input field for max participants (min: 2, max: 100)
-- Real-time calculation of reward per participant
+- Input field for max participants (OPTIONAL - can be left empty for unlimited)
+- Display of locked STX amount in party
+- "Start Spraying" button available immediately (don't wait for max)
 - Form validation with helpful error messages
 - Transaction confirmation via wallet
 - Visual feedback during transaction processing
 
 **User Flow:**
-1. User connects wallet
-2. User enters STX amount and participant count
-3. User clicks "Host Party"
-4. Wallet prompts for transaction approval
-5. On success: Party appears in Active Parties list
-6. Toast notification: "Party created! Share with friends! 🎉"
+1. Creator/host connects wallet
+2. Enters STX amount to lock (e.g., 100 STX)
+3. Optionally sets max participants (e.g., 50 people) or leaves unlimited
+4. Clicks "Create Spray Party"
+5. Wallet prompts for STX lock transaction
+6. Party appears in Active Parties list
+7. Host can share party link/ID with audience
+8. Host can start spraying STX to joined participants at any time
+9. Toast notification: "Spray party created! Start inviting participants! 🎉"
 
 ### 3. Active Parties Dashboard
 **Priority:** P0
@@ -84,39 +91,57 @@ Party Stacks creates a social, collaborative blockchain experience where:
 **Priority:** P0
 
 **Requirements:**
-- "Join Party" button (visible only if party not full AND user not participant)
-- Wallet transaction approval flow
-- Toast notification on join: "You are in the splash zone! Waiting for X more builders..."
+- "Join Party" button (visible if party not full OR no max set, AND user not participant)
+- Free to join (no STX cost to participants)
+- Toast notification on join: "You're in the spray zone! Wait for the host to spray! 💦"
 - Immediate UI update showing new participant count
 - Disabled state if user already joined
+- Disabled if max participants reached (when set)
 - Loading state during transaction
 
 **User Flow:**
-1. User browses active parties
-2. User clicks "Join Party" on desired party
-3. Wallet prompts for transaction approval (STX transfer)
-4. On success: Progress bar updates
-5. Toast shows remaining participants needed
-6. If party fills: All participants can now claim
+1. User browses active parties (from link, dashboard, or discovery)
+2. User clicks "Join Party"
+3. Wallet prompts for transaction approval (joining signature, no STX cost)
+4. On success: Participant count updates
+5. Toast: "You're in the spray zone! Wait for the host to spray! 💦"
+6. User sees party in "My Parties" dashboard
+7. When host sprays: Balance updates automatically
 
-### 5. Claim My Rain
+### 5. Spray & Claim System
 **Priority:** P0
 
-**Requirements:**
-- "Claim My Rain" button (visible only if party full AND user is participant)
-- Wallet transaction approval for claim
-- Distribution of proportional STX share
-- Toast notification: "You claimed X STX! 💰"
-- Visual feedback during claim process
-- Party marked as completed after all claims
+**Host Spray Capability:**
+- "Spray Now" button available to host at any time
+- Can spray full amount or partial amounts
+- Can spray before max participants reached
+- Distribution splits among current participants
+- Each spray updates participant balances
 
-**User Flow:**
-1. Party reaches max participants
-2. "Claim" button appears for all participants
-3. User clicks "Claim My Rain"
-4. Wallet prompts for transaction approval
-5. STX distributed to user's wallet
-6. Success confirmation toast
+**Participant Dashboard & Claiming:**
+- "My Parties" dashboard showing all joined parties
+- Display of unclaimed balance per party
+- "Claim" button available whenever balance > 0
+- NO forced immediate claiming
+- Participant can claim anytime (even days/weeks later)
+- Multiple partial claims allowed as host sprays more
+- Toast notification: "You claimed X STX! 💰"
+
+**User Flow (Claiming):**
+1. Participant opens dashboard
+2. Sees unclaimed balance (e.g., "3.5 STX from Party #42")
+3. Clicks "Claim" when ready
+4. Wallet approves transaction
+5. STX transferred to wallet
+6. Balance updates (shows remaining if any)
+
+**User Flow (Spraying):**
+1. Host clicks "Spray Now" on their party
+2. Enters amount to spray (e.g., 50 STX of 100 locked)
+3. Confirms transaction
+4. Amount distributed evenly among current participants
+5. Participant balances update automatically
+6. Remaining locked STX can be sprayed later
 
 ### 6. Real-time On-chain Synchronization
 **Priority:** P0

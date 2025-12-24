@@ -1,5 +1,5 @@
-;; Party Rain - Collaborative STX Pool Contract
-;; Allows users to create parties, join them, and claim proportional rewards
+;; Party Stacks - Spray Party Contract
+;; Enables creators to lock STX and spray rewards to participants over time
 
 ;; Constants
 (define-constant contract-owner tx-sender)
@@ -7,9 +7,9 @@
 (define-constant err-not-found (err u101))
 (define-constant err-already-joined (err u102))
 (define-constant err-party-full (err u103))
-(define-constant err-party-not-full (err u104))
-(define-constant err-already-claimed (err u105))
-(define-constant err-not-participant (err u106))
+(define-constant err-insufficient-locked (err u104))
+(define-constant err-not-host (err u105))
+(define-constant err-no-balance (err u106))
 (define-constant err-invalid-amount (err u107))
 (define-constant err-invalid-participants (err u108))
 
@@ -21,20 +21,21 @@
   { party-id: uint }
   {
     host: principal,
-    stx-amount: uint,
-    max-participants: uint,
+    locked-stx: uint,
+    sprayed-stx: uint,
+    max-participants: (optional uint),  ;; Optional - can be none for unlimited
     current-participants: uint,
     is-active: bool,
-    is-full: bool,
     created-at: uint
   }
 )
 
-(define-map participants
+(define-map participant-balances
   { party-id: uint, participant: principal }
   { 
-    joined-at: uint,
-    has-claimed: bool
+    unclaimed-balance: uint,
+    total-claimed: uint,
+    joined-at: uint
   }
 )
 
@@ -49,17 +50,24 @@
   (map-get? parties { party-id: party-id })
 )
 
-(define-read-only (get-participant (party-id uint) (participant principal))
-  (map-get? participants { party-id: party-id, participant: participant })
+(define-read-only (get-participant-balance (party-id uint) (participant principal))
+  (map-get? participant-balances { party-id: party-id, participant: participant })
 )
 
 (define-read-only (is-participant (party-id uint) (participant principal))
-  (is-some (map-get? participants { party-id: party-id, participant: participant }))
+  (is-some (map-get? participant-balances { party-id: party-id, participant: participant }))
 )
 
-(define-read-only (get-reward-per-participant (party-id uint))
+(define-read-only (get-unclaimed-balance (party-id uint) (participant principal))
+  (match (get-participant-balance party-id participant)
+    balance (ok (get unclaimed-balance balance))
+    (err err-not-found)
+  )
+)
+
+(define-read-only (get-remaining-locked-stx (party-id uint))
   (match (get-party party-id)
-    party (ok (/ (get stx-amount party) (get max-participants party)))
+    party (ok (- (get locked-stx party) (get sprayed-stx party)))
     (err err-not-found)
   )
 )
@@ -68,18 +76,34 @@
   (var-get party-id-nonce)
 )
 
+(define-read-only (is-party-full (party-id uint))
+  (match (get-party party-id)
+    party (match (get max-participants party)
+      max-count (ok (>= (get current-participants party) max-count))
+      (ok false)  ;; No max set, never full
+    )
+    (err err-not-found)
+  )
+)
+
 ;; Public functions
 
-(define-public (create-party (stx-amount uint) (max-participants uint))
+;; Create spray party with optional max participants
+(define-public (create-party (stx-amount uint) (max-participants-opt (optional uint)))
   (let
     (
       (party-id (var-get party-id-nonce))
     )
     ;; Validate inputs
     (asserts! (> stx-amount u0) err-invalid-amount)
-    (asserts! (>= max-participants u2) err-invalid-participants)
     
-    ;; Transfer STX from host to contract
+    ;; If max-participants is set, ensure it's >= 1
+    (match max-participants-opt
+      max-count (asserts! (>= max-count u1) err-invalid-participants)
+      true
+    )
+    
+    ;; Lock STX from host to contract
     (try! (stx-transfer? stx-amount tx-sender (as-contract tx-sender)))
     
     ;; Create party
@@ -87,24 +111,13 @@
       { party-id: party-id }
       {
         host: tx-sender,
-        stx-amount: stx-amount,
-        max-participants: max-participants,
-        current-participants: u1,
+        locked-stx: stx-amount,
+        sprayed-stx: u0,
+        max-participants: max-participants-opt,
+        current-participants: u0,
         is-active: true,
-        is-full: false,
         created-at: block-height
       }
-    )
-    
-    ;; Add host as first participant
-    (map-set participants
-      { party-id: party-id, participant: tx-sender }
-      { joined-at: block-height, has-claimed: false }
-    )
-    
-    (map-set participant-list
-      { party-id: party-id, index: u0 }
-      { participant: tx-sender }
     )
     
     ;; Increment nonce
@@ -114,83 +127,175 @@
   )
 )
 
+;; Join party (free, no STX cost to participants)
 (define-public (join-party (party-id uint))
   (let
     (
       (party (unwrap! (get-party party-id) err-not-found))
       (current-count (get current-participants party))
-      (max-count (get max-participants party))
     )
     ;; Validate party state
     (asserts! (get is-active party) err-not-found)
-    (asserts! (< current-count max-count) err-party-full)
     (asserts! (not (is-participant party-id tx-sender)) err-already-joined)
     
-    ;; Calculate join amount (proportional share)
+    ;; Check if party is full (only if max is set)
+    (match (get max-participants party)
+      max-count (asserts! (< current-count max-count) err-party-full)
+      true  ;; No max, always allow joining
+    )
+    
+    ;; Add participant with zero balance initially
+    (map-set participant-balances
+      { party-id: party-id, participant: tx-sender }
+      { 
+        unclaimed-balance: u0,
+        total-claimed: u0,
+        joined-at: block-height
+      }
+    )
+    
+    (map-set participant-list
+      { party-id: party-id, index: current-count }
+      { participant: tx-sender }
+    )
+    
+    ;; Update party participant count
+    (map-set parties
+      { party-id: party-id }
+      (merge party { current-participants: (+ current-count u1) })
+    )
+    
+    (ok (+ current-count u1))
+  )
+)
+
+;; Host sprays STX to current participants
+(define-public (spray-stx (party-id uint) (amount uint))
+  (let
+    (
+      (party (unwrap! (get-party party-id) err-not-found))
+      (remaining-locked (- (get locked-stx party) (get sprayed-stx party)))
+      (participant-count (get current-participants party))
+    )
+    ;; Validate
+    (asserts! (is-eq tx-sender (get host party)) err-not-host)
+    (asserts! (> participant-count u0) err-invalid-participants)
+    (asserts! (<= amount remaining-locked) err-insufficient-locked)
+    (asserts! (> amount u0) err-invalid-amount)
+    
+    ;; Calculate amount per participant
     (let
       (
-        (join-amount (/ (get stx-amount party) max-count))
+        (amount-per-participant (/ amount participant-count))
       )
-      ;; Transfer STX from joiner to contract
-      (try! (stx-transfer? join-amount tx-sender (as-contract tx-sender)))
+      ;; Update all participant balances
+      (try! (distribute-to-participants party-id participant-count amount-per-participant))
       
-      ;; Add participant
-      (map-set participants
-        { party-id: party-id, participant: tx-sender }
-        { joined-at: block-height, has-claimed: false }
-      )
-      
-      (map-set participant-list
-        { party-id: party-id, index: current-count }
-        { participant: tx-sender }
+      ;; Update party sprayed amount
+      (map-set parties
+        { party-id: party-id }
+        (merge party { 
+          sprayed-stx: (+ (get sprayed-stx party) (* amount-per-participant participant-count))
+        })
       )
       
-      ;; Update party
-      (let
-        (
-          (new-count (+ current-count u1))
-          (is-now-full (>= new-count max-count))
-        )
-        (map-set parties
-          { party-id: party-id }
-          (merge party {
-            current-participants: new-count,
-            is-full: is-now-full
-          })
-        )
-        
-        (ok new-count)
-      )
+      (ok amount-per-participant)
     )
   )
 )
 
-(define-public (claim-rain (party-id uint))
+;; Helper function to distribute to all participants
+(define-private (distribute-to-participants (party-id uint) (count uint) (amount uint))
+  (begin
+    (try! (update-participant-balance-at-index party-id u0 amount count))
+    (ok true)
+  )
+)
+
+;; Recursive function to update participant balances
+(define-private (update-participant-balance-at-index 
+  (party-id uint) 
+  (index uint) 
+  (amount uint)
+  (max-index uint)
+)
+  (if (< index max-index)
+    (match (map-get? participant-list { party-id: party-id, index: index })
+      entry 
+        (let
+          (
+            (participant (get participant entry))
+          )
+          (match (get-participant-balance party-id participant)
+            balance
+              (begin
+                (map-set participant-balances
+                  { party-id: party-id, participant: participant }
+                  (merge balance { 
+                    unclaimed-balance: (+ (get unclaimed-balance balance) amount)
+                  })
+                )
+                (update-participant-balance-at-index party-id (+ index u1) amount max-index)
+              )
+            (err err-not-found)
+          )
+        )
+      (err err-not-found)
+    )
+    (ok true)
+  )
+)
+
+;; Participant claims their unclaimed balance
+(define-public (claim-balance (party-id uint))
+  (let
+    (
+      (balance-data (unwrap! (get-participant-balance party-id tx-sender) err-not-found))
+      (unclaimed (get unclaimed-balance balance-data))
+    )
+    ;; Validate
+    (asserts! (> unclaimed u0) err-no-balance)
+    
+    ;; Transfer STX from contract to participant
+    (try! (as-contract (stx-transfer? unclaimed tx-sender tx-sender)))
+    
+    ;; Update participant balance
+    (map-set participant-balances
+      { party-id: party-id, participant: tx-sender }
+      (merge balance-data { 
+        unclaimed-balance: u0,
+        total-claimed: (+ (get total-claimed balance-data) unclaimed)
+      })
+    )
+    
+    (ok unclaimed)
+  )
+)
+
+;; Host can close party and reclaim remaining locked STX
+(define-public (close-party (party-id uint))
   (let
     (
       (party (unwrap! (get-party party-id) err-not-found))
-      (participant-data (unwrap! (get-participant party-id tx-sender) err-not-participant))
+      (remaining (- (get locked-stx party) (get sprayed-stx party)))
     )
-    ;; Validate claim conditions
-    (asserts! (get is-full party) err-party-not-full)
-    (asserts! (not (get has-claimed participant-data)) err-already-claimed)
+    ;; Validate
+    (asserts! (is-eq tx-sender (get host party)) err-not-host)
+    (asserts! (get is-active party) err-not-found)
     
-    ;; Calculate reward
-    (let
-      (
-        (reward (/ (get stx-amount party) (get max-participants party)))
-      )
-      ;; Transfer reward from contract to participant
-      (try! (as-contract (stx-transfer? reward tx-sender (unwrap-panic (get participant tx-sender)))))
-      
-      ;; Mark as claimed
-      (map-set participants
-        { party-id: party-id, participant: tx-sender }
-        (merge participant-data { has-claimed: true })
-      )
-      
-      (ok reward)
+    ;; Return remaining STX to host
+    (if (> remaining u0)
+      (try! (as-contract (stx-transfer? remaining tx-sender (get host party))))
+      true
     )
+    
+    ;; Mark party as inactive
+    (map-set parties
+      { party-id: party-id }
+      (merge party { is-active: false })
+    )
+    
+    (ok remaining)
   )
 )
 
