@@ -145,29 +145,6 @@ party-stacks/
 └── README.md                      # You are here!
 ```
 
-## 🎯 Hackathon Strategy
-
-This project is optimized for the **Stacks blockchain hackathon**:
-
-### Ranking Factors
-1. ✅ **GitHub Progress** - Regular commits every 3-4 hours
-2. ✅ **Onchain Progress** - Testnet deployment + test transactions
-3. ✅ **WalletConnect Focus** - Prominent logo and integration
-4. ✅ **The "Claim" Loop** - 5+ friends creating on-chain activity
-5. ✅ **Classy UX** - Premium glassmorphism and animations
-
-### Testnet Activity
-```bash
-# Create test party
-npm run test:create-party
-
-# Invite friends to join
-# Each join creates an on-chain transaction signal
-
-# Full party triggers claim availability
-npm run test:claim
-```
-
 ## 🔬 Development
 
 ### Running Tests (TODO)
