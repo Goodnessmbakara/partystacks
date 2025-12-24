@@ -197,4 +197,4 @@ MIT License - see [LICENSE](LICENSE) for details
 
 ---
 
-Built with ❤️ on the Stacks blockchain | **#PartyStacks** 🎉💦
+Built by [@goodnesmbakara](https://twitter.com/goodnesmbakara) | **#PartyStacks** 🎉💦

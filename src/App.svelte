@@ -37,7 +37,7 @@
   <footer class="footer">
     <div class="container footer-content">
       <p class="text-muted">
-        Built with ❤️ on the Stacks blockchain
+        Built by <a href="https://twitter.com/goodnesmbakara" target="_blank" rel="noopener noreferrer" class="footer-link">@goodnesmbakara</a>
       </p>
       <div class="footer-links">
         <a 
