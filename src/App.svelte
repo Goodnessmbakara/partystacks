@@ -6,9 +6,9 @@
   import Toast from './components/Toast.svelte';
   import { initializeWallet } from './lib/wallet';
   
-  onMount(() => {
-    // Initialize wallet on app load
-    initializeWallet();
+  onMount(async () => {
+    //  Initialize wallet on app load and handle any pending sign-in
+    await initializeWallet();
   });
 </script>
 
