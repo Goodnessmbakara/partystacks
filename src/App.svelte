@@ -3,8 +3,12 @@
   import ConnectWallet from './components/ConnectWallet.svelte';
   import HostParty from './components/HostParty.svelte';
   import ActiveParties from './components/ActiveParties.svelte';
+  import MyParties from './components/MyParties.svelte';
   import Toast from './components/Toast.svelte';
   import { initializeWallet } from './lib/wallet';
+  
+  type View = 'host' | 'active' | 'myParties';
+  let currentView: View = 'host';
   
   onMount(async () => {
     //  Initialize wallet on app load and handle any pending sign-in
@@ -28,8 +32,37 @@
   
   <main class="main">
     <div class="container">
-      <HostParty />
-      <ActiveParties />
+      <nav class="view-nav">
+        <button 
+          class="nav-btn"
+          class:active={currentView === 'host'}
+          on:click={() => currentView = 'host'}
+        >
+          🎉 Host Party
+        </button>
+        <button 
+          class="nav-btn"
+          class:active={currentView === 'active'}
+          on:click={() => currentView = 'active'}
+        >
+          🔥 Active Parties
+        </button>
+        <button 
+          class="nav-btn"
+          class:active={currentView === 'myParties'}
+          on:click={() => currentView = 'myParties'}
+        >
+          💰 My Parties
+        </button>
+      </nav>
+      
+      {#if currentView === 'host'}
+        <HostParty />
+      {:else if currentView === 'active'}
+        <ActiveParties />
+      {:else}
+        <MyParties />
+      {/if}
     </div>
   </main>
   
@@ -108,6 +141,39 @@
   .main {
     flex: 1;
     padding: var(--spacing-xl) 0;
+  }
+  
+  .view-nav {
+    display: flex;
+    gap: var(--spacing-sm);
+    margin-bottom: var(--spacing-xl);
+    padding: var(--spacing-xs);
+    background: var(--glass-bg);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--glass-border);
+  }
+  
+  .nav-btn {
+    flex: 1;
+    padding: var(--spacing-sm) var(--spacing-md);
+    background: transparent;
+    border: none;
+    border-radius: var(--radius-md);
+    color: var(--text-secondary);
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+  
+  .nav-btn:hover {
+    color: var(--text-primary);
+    background: rgba(255, 255, 255, 0.05);
+  }
+  
+  .nav-btn.active {
+    background: linear-gradient(135deg, var(--accent-orange), var(--accent-purple));
+    color: white;
   }
   
   .footer {
