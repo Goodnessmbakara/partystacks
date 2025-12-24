@@ -7,12 +7,12 @@
   isConnected.subscribe(value => connected = value);
   walletAddress.subscribe(value => address = value);
   
-  function handleConnect() {
-    connectWallet();
+  async function handleConnect() {
+    await connectWallet();
   }
   
-  function handleDisconnect() {
-    disconnectWallet();
+  async function handleDisconnect() {
+    await disconnectWallet();
   }
 </script>
 
