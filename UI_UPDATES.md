@@ -105,14 +105,17 @@ My Spray Parties
 
 ### 4. NEW: SprayModal.svelte 🆕 MEDIUM PRIORITY
 
-**Purpose:** Host sprays STX to participants
+**Purpose:** Host sprays STX to participants with distribution mode selection
 
 **Features:**
 - Shows total locked, already sprayed, remaining
+- **Distribution mode selector**: Equal Sharing vs Random (Party Mode)
 - Input for amount to spray
 - Shows participants count
-- Calculates amount per participant
-- Preview: "Spray 50 STX to 10 participants = 5 STX each"
+- Calculates preview based on selected mode
+- Preview for Equal: "Spray 50 STX to 10 participants = 5 STX each"
+- Preview for Random: "Spray 50 STX to 10 participants = 1-15 STX each (random)"
+- Explanation tooltip for Random mode
 - Confirmation button
 
 **UI:**
@@ -125,12 +128,20 @@ Remaining: 100 STX
 
 Current participants: 10
 
+Distribution Mode:
+( ) Equal Sharing       (everyone gets same amount)
+(•) Random (Party Mode) (simulate real money spray!) ⓘ
+
 Amount to spray: [50] STX
 
-Each participant receives: 5 STX
+Preview (Random Mode):
+  Each participant receives: 1-15 STX
+  Creates excitement - who catches the most?
+  Everyone guaranteed to get something!
+
 Remaining after spray: 50 STX
 
-[Spray Now]  [Cancel]
+[Spray Now 💦]  [Cancel]
 ```
 
 ### 5. ActiveParties.svelte ✏️ LOW PRIORITY

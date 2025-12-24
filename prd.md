@@ -137,11 +137,29 @@ Party Stacks creates a gamified reward distribution experience where:
 
 **User Flow (Spraying):**
 1. Host clicks "Spray Now" on their party
-2. Enters amount to spray (e.g., 50 STX of 100 locked)
-3. Confirms transaction
-4. Amount distributed evenly among current participants
-5. Participant balances update automatically
-6. Remaining locked STX can be sprayed later
+2. Selects distribution mode:
+   - **Equal Sharing**: Everyone gets same amount
+   - **Random (Party Mode)**: Variable amounts simulate real money spray
+3. Enters amount to spray (e.g., 50 STX of 100 locked)
+4. Confirms transaction
+5. Amount distributed based on selected mode:
+   - Equal: 50 STX ÷ 10 participants = 5 STX each
+   - Random: Weighted distribution (e.g., 2 STX, 8 STX, 3 STX, 9 STX, etc.)
+6. Participant balances update automatically
+7. Remaining locked STX can be sprayed later
+
+**Random Distribution Algorithm:**
+- Uses deterministic on-chain randomness (block hash seeded)
+- Guarantees: Every participant gets SOMETHING (minimum 10% of equal share)
+- Maximum: No participant gets more than 3x the equal share
+- Total always equals spray amount (no rounding errors)
+- Creates excitement: "Who caught the most?"
+- Fair enough that nobody feels cheated
+- Example for 100 STX to 10 people:
+  - Equal would be: 10 STX each
+  - Random might be: 4, 15, 8, 12, 6, 18, 9, 11, 7, 10 STX
+  - Min guaranteed: 1 STX (10% of 10)
+  - Max possible: 30 STX (3x of 10)
 
 ### 6. Real-time On-chain Synchronization
 **Priority:** P0
